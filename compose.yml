@@ -1,0 +1,78 @@
+services:
+  redis:
+    image: redis:7.4
+    restart: always
+    networks:
+      - chap-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  postgres:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: chap
+      POSTGRES_PASSWORD: chap
+      POSTGRES_DB: chap
+      POSTGRES_HOST_AUTH_METHOD: md5
+    volumes:
+      - chap-db:/var/lib/postgresql/data
+    networks:
+      - chap-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chap"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    image: ghcr.io/dhis2-chap/chap-worker-with-inla:master
+    depends_on:
+      - postgres
+      - redis
+    restart: always
+    env_file: .env
+    environment:
+      IS_IN_DOCKER: "1"
+      CHAP_DATABASE_URL: postgresql://chap:chap@postgres:5432/chap
+      CELERY_BROKER: redis://redis:6379
+      C_FORCE_ROOT: "1"  # TODO: Remove this when we have a proper user
+    command: >
+      /app/.venv/bin/celery -A chap_core.rest_api_src.celery_tasks worker --loglevel=info
+    volumes:
+      - ./logs:/app/logs:rw
+    networks:
+      - chap-network
+
+  chap:
+    image: ghcr.io/dhis2-chap/chap-core:master
+    depends_on:
+      - redis
+      - worker
+      - postgres
+    restart: always
+    env_file: .env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      CHAP_DATABASE_URL: postgresql://chap:chap@postgres:5432/chap
+      CELERY_BROKER: redis://redis:6379/0
+      IS_IN_DOCKER: "1"
+    command: /app/.venv/bin/chap serve
+    working_dir: /
+    volumes:
+      - ./logs:/app/logs:rw
+    ports:
+      - "8000:8000"
+    networks:
+      - chap-network
+
+networks:
+  chap-network:
+    driver: bridge
+
+volumes:
+  chap-db: {}
