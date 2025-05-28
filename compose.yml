@@ -34,8 +34,9 @@ services:
       - postgres
       - redis
     restart: always
-    env_file: .env
     environment:
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${GOOGLE_SERVICE_ACCOUNT_EMAIL}
+      GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: ${GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY}
       IS_IN_DOCKER: "1"
       CHAP_DATABASE_URL: postgresql://chap:chap@postgres:5432/chap
       CELERY_BROKER: redis://redis:6379
@@ -54,8 +55,9 @@ services:
       - worker
       - postgres
     restart: always
-    env_file: .env
     environment:
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${GOOGLE_SERVICE_ACCOUNT_EMAIL}
+      GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: ${GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY}
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       CHAP_DATABASE_URL: postgresql://chap:chap@postgres:5432/chap
