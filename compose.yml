@@ -30,6 +30,7 @@ services:
 
   worker:
     image: ghcr.io/dhis2-chap/chap-worker-with-inla:master
+    # image: ghcr.io/dhis2-chap/chap-core-with-inla:latest
     depends_on:
       - postgres
       - redis
@@ -50,6 +51,7 @@ services:
 
   chap:
     image: ghcr.io/dhis2-chap/chap-core:master
+    # image: ghcr.io/dhis2-chap/chap-core:latest
     depends_on:
       - redis
       - worker
