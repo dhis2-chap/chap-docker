@@ -29,7 +29,7 @@ services:
       retries: 5
 
   worker:
-    image: ghcr.io/dhis2-chap/chap-worker-with-inla:master
+    image: ghcr.io/dhis2-chap/chap-worker-with-inla:dev
     # image: ghcr.io/dhis2-chap/chap-core-with-inla:latest
     depends_on:
       - postgres
@@ -43,15 +43,14 @@ services:
       CELERY_BROKER: redis://redis:6379
       C_FORCE_ROOT: "1"  # TODO: Remove this when we have a proper user
     command: >
-      /app/.venv/bin/celery -A chap_core.rest_api_src.celery_tasks worker --loglevel=info
-    volumes:
-      - ./logs:/app/logs:rw
+      /app/.venv/bin/celery -A chap_core.rest_api.celery_tasks worker --loglevel=info
     networks:
       - chap-network
 
   chap:
-    image: ghcr.io/dhis2-chap/chap-core:master
+    image: ghcr.io/dhis2-chap/chap-core:dev
     # image: ghcr.io/dhis2-chap/chap-core:latest
+    platform: linux/amd64
     depends_on:
       - redis
       - worker
@@ -66,9 +65,7 @@ services:
       CELERY_BROKER: redis://redis:6379/0
       IS_IN_DOCKER: "1"
     command: /app/.venv/bin/chap serve
-    working_dir: /
-    volumes:
-      - ./logs:/app/logs:rw
+    working_dir: /app
     ports:
       - "8000:8000"
     networks:
