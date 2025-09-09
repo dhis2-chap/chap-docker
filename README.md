@@ -37,5 +37,5 @@ Climate Health Analysis Platform Docker
 
 - To stop the running services, use the command:
   ```bash
-  docker-compose down
+  docker compose down
   ```
